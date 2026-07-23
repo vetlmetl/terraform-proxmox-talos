@@ -60,10 +60,9 @@ output "kubeconfig" {
 
 ## High-availability control plane endpoint (VIP)
 
-By default the cluster endpoint points at the first control node's IP, which is a
-single point of failure. To make it highly available, set `cluster_endpoint` to a
-shared [Talos VIP](https://www.talos.dev/latest/talos-guides/network/vip/) and
-define that VIP on the control nodes via a config patch:
+Set `cluster_endpoint` to a shared
+[Talos VIP](https://www.talos.dev/latest/talos-guides/network/vip/) and define
+that VIP on the control nodes via a config patch:
 
 ```terraform
 module "talos" {
@@ -88,33 +87,6 @@ module "talos" {
   ]
 }
 ```
-
-`cluster_endpoint` defaults to `null` (legacy first-node behavior), so this change
-is fully backward compatible.
-
-## Per-node configuration patches
-
-`control_node_config_patches` and `worker_node_config_patches` are maps keyed by
-node name. Their patches are appended *after* the shared
-`control_machine_config_patches` / `worker_machine_config_patches`, so they can
-override shared values — useful for per-node tuning such as kubelet args or node
-labels:
-
-```terraform
-  worker_node_config_patches = {
-    "test-worker-0" = [yamlencode({
-      machine = { kubelet = { extraArgs = { "node-labels" = "gpu=true" } } }
-    })]
-  }
-```
-
-Both default to `{}`, so they are backward compatible.
-
-> Note: avoid using these to set static node IPs via `dhcp: false`. This module
-> discovers node IPs through the guest agent and assumes they are stable, so a
-> static-address patch can change a node's IP out from under that discovery (or
-> strand the node). For predictable IPs, pin a `mac_address` and use a DHCP
-> reservation instead.
 
 Check out our [blog post](https://bbtechsystems.com/blog/k8s-with-pxe-tf/) for more details on using this module.
 
