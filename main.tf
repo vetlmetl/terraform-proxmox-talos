@@ -10,12 +10,20 @@ locals {
     )
 }
 
-resource "proxmox_virtual_environment_download_file" "talos_image" {
+# Short-name alias for the former proxmox_virtual_environment_download_file
+# (the long name is deprecated and removed in bpg/proxmox v1.0). The moved
+# block re-addresses existing state in place — no image re-download.
+resource "proxmox_download_file" "talos_image" {
     content_type = "iso"
     datastore_id = var.proxmox_iso_datastore
     node_name    = values(var.control_nodes)[0]
     url          = "https://factory.talos.dev/image/${var.talos_schematic_id}/v${var.talos_version}/metal-${var.talos_arch}.qcow2"
     file_name    = "${var.talos_cluster_name}-talos_linux-${var.talos_schematic_id}-${var.talos_version}-${var.talos_arch}.img"
+}
+
+moved {
+    from = proxmox_virtual_environment_download_file.talos_image
+    to   = proxmox_download_file.talos_image
 }
 
 resource "proxmox_virtual_environment_vm" "talos_control_vm" {
@@ -36,7 +44,7 @@ resource "proxmox_virtual_environment_vm" "talos_control_vm" {
     }
     disk {
         datastore_id = var.proxmox_image_datastore
-        file_id      = proxmox_virtual_environment_download_file.talos_image.id
+        file_id      = proxmox_download_file.talos_image.id
         interface    = "virtio0"
         iothread     = true
         discard      = "on"
@@ -70,7 +78,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vm" {
     }
     disk {
         datastore_id = var.proxmox_image_datastore
-        file_id      = proxmox_virtual_environment_download_file.talos_image.id
+        file_id      = proxmox_download_file.talos_image.id
         interface    = "virtio0"
         iothread     = true
         discard      = "on"

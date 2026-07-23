@@ -4,7 +4,8 @@ terraform {
   required_providers {
     proxmox = {
       source = "bpg/proxmox"
-      version = ">= 0.68.0"
+      # >= 0.100.0: introduces the short-name proxmox_download_file alias used in main.tf
+      version = ">= 0.100.0"
     }
     talos = {
       source = "siderolabs/talos"
