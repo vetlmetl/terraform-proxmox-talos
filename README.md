@@ -11,6 +11,10 @@ Terraform module to provision Talos Linux Kubernetes clusters on Proxmox VE.
 - **`cluster_endpoint` is required** (no default). Point it at a shared Talos VIP
   or load balancer for an HA Kubernetes API endpoint — see
   [HA control plane (VIP)](#high-availability-control-plane-endpoint-vip).
+- **`node_ipv4_cidr` is required** (no default). The module selects each node's
+  primary IP from the QEMU guest-agent report by matching this subnet, instead of
+  a fragile fixed interface index. A VIP inside the subnet (e.g. `cluster_endpoint`)
+  is excluded automatically. (Upstream `v1.x` hard-coded `ipv4_addresses[7][0]`.)
 - The upstream **per-node** config-patch variables were removed in favour of the
   cluster-wide `control_machine_config_patches` / `worker_machine_config_patches`.
 - Uses the short-name `proxmox_download_file` resource, so it requires
@@ -20,7 +24,7 @@ Consume it by tag:
 
 ```terraform
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v1.0.2"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v2.0.0"
   # ...
 }
 ```
@@ -48,11 +52,12 @@ provider "proxmox" {
 }
 
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v1.0.2"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v2.0.0"
 
   talos_cluster_name = "test-cluster"
   talos_version      = "1.13.0"
   cluster_endpoint   = "https://192.168.88.200:6443" # required (VIP)
+  node_ipv4_cidr     = "192.168.88.0/24"             # required (node subnet)
 
   control_nodes = {
     "test-control-0" = "pve1"
