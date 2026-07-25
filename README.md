@@ -1,10 +1,11 @@
 # terraform-proxmox-talos
 
-Terraform module to provision Talos Linux Kubernetes clusters on Proxmox VE.
+A Terraform module for provisioning Talos Linux Kubernetes clusters on Proxmox VE.
 
-> **Personal fork** of [`bbtechsys/talos/proxmox`](https://registry.terraform.io/modules/bbtechsys/talos/proxmox).
-> It intentionally diverges from upstream (see [Fork differences](#fork-differences))
-> and is pinned by **release tag**, not consumed from the registry.
+This is my fork of [`bbtechsys/talos/proxmox`](https://registry.terraform.io/modules/bbtechsys/talos/proxmox).
+It diverges from upstream in a few ways (see [Fork differences](#fork-differences)),
+and I consume it by release tag rather than from the registry. I use it from my
+`terraform-proxmox-k8s` cluster repo.
 
 ## Fork differences
 
