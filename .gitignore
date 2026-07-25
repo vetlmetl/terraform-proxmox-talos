@@ -11,6 +11,12 @@ kubeconfig.yaml
 crash.log
 crash.*.log
 
+# Dependency lock file — a ROOT-module artifact. It has no effect when this
+# module is consumed via `source`, so it's not committed here (only a local
+# byproduct of testing the module standalone). The consuming root repo commits
+# its own lock file with multi-platform hashes.
+.terraform.lock.hcl
+
 # Variable files (may hold secrets)
 *.tfvars
 *.tfvars.json
