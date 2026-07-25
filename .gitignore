@@ -1,0 +1,16 @@
+# Generated cluster credentials — never commit (contain client certs/keys)
+talosconfig
+talosconfig.yaml
+kubeconfig
+kubeconfig.yaml
+
+# Terraform local state and working directories
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variable files (may hold secrets)
+*.tfvars
+*.tfvars.json
