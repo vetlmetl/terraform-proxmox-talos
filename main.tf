@@ -131,9 +131,20 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vm" {
   }
 }
 
-resource "talos_machine_secrets" "talos_secrets" {}
+# The version contract is pinned to the Talos version we actually install, not
+# left to default. Unset, it falls back to whatever Talos SDK the provider was
+# built against, so a provider bump silently renders a newer config schema than
+# the installed Talos can parse - provider 0.12.0 (SDK 1.14) emits a
+# DiscoveryServiceConfig document that a 1.13 node rejects outright with
+# `"DiscoveryServiceConfig" "v1alpha1": not registered`.
+resource "talos_machine_secrets" "talos_secrets" {
+  talos_version = var.talos_version
+}
 
 data "talos_machine_configuration" "control_mc" {
+  # Pinned for the same reason as the secrets above. This is the config schema
+  # contract, not the installed version - the image URL is what installs Talos.
+  talos_version    = var.talos_version
   cluster_name     = var.talos_cluster_name
   machine_type     = "controlplane"
   cluster_endpoint = var.cluster_endpoint
@@ -141,6 +152,9 @@ data "talos_machine_configuration" "control_mc" {
 }
 
 data "talos_machine_configuration" "worker_mc" {
+  # Pinned for the same reason as the secrets above. This is the config schema
+  # contract, not the installed version - the image URL is what installs Talos.
+  talos_version    = var.talos_version
   cluster_name     = var.talos_cluster_name
   machine_type     = "worker"
   cluster_endpoint = var.cluster_endpoint
@@ -170,8 +184,20 @@ resource "talos_machine_configuration_apply" "talos_worker_mc_apply" {
   config_patches              = var.worker_machine_config_patches
 }
 
-# You only need to bootstrap 1 control node, we pick the first one
+# You only need to bootstrap 1 control node, we pick the first one.
+#
+# depends_on is load-bearing: the arguments below reference only the secrets and
+# the node IP, so without it Terraform happily bootstraps in parallel with the
+# config apply. The node is still in maintenance mode at that point, presenting
+# its self-signed maintenance cert, and bootstrap fails with
+# `certificate signed by unknown authority`. It usually hides because the config
+# apply finishes inside bootstrap's retry window - when the apply fails, the
+# bootstrap burns ten minutes and then reports a misleading TLS error. Workers
+# are deliberately not listed; etcd only needs the control plane.
 resource "talos_machine_bootstrap" "talos_bootstrap" {
+  depends_on = [
+    talos_machine_configuration_apply.talos_control_mc_apply
+  ]
   node                 = local.primary_control_node_ip
   client_configuration = talos_machine_secrets.talos_secrets.client_configuration
 }

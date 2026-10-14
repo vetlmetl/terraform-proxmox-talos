@@ -129,7 +129,7 @@ variable "talos_schematic_id" {
 }
 
 variable "talos_version" {
-  description = "Version of Talos to use"
+  description = "Version of Talos to use. Drives both the factory image URL (what gets installed) and the machine config version contract, so the generated config always matches the running Talos rather than whatever SDK the provider ships."
   type        = string
 }
 

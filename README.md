@@ -20,15 +20,47 @@ and I consume it by release tag rather than from the registry. I use it from my
   cluster-wide `control_machine_config_patches` / `worker_machine_config_patches`.
 - Uses the short-name `proxmox_download_file` resource, so it requires
   **`bpg/proxmox >= 0.100.0`**.
+- **`talos_version` pins the machine config version contract**, not just the
+  factory image URL. Upstream leaves the contract unset, which means it quietly
+  defaults to whatever Talos SDK the provider happens to be built against. Bump
+  the provider and you can end up generating a config schema newer than the Talos
+  you're installing: provider `0.12.0` ships SDK 1.14, which emits a
+  `DiscoveryServiceConfig` document, and a 1.13 node refuses the whole config
+  with `"DiscoveryServiceConfig" "v1alpha1": not registered`. Pinning the
+  contract to the version being installed keeps the two in step.
+- **`talos_machine_bootstrap` waits on the control-plane config apply.** Its own
+  arguments only reference the secrets and a node IP, so Terraform is free to run
+  it in parallel with the config apply — against a node still in maintenance mode,
+  which fails with `certificate signed by unknown authority` after a long retry
+  window. The dependency is explicit now.
 
 Consume it by tag:
 
 ```terraform
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v2.0.0"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.0.0"
   # ...
 }
 ```
+
+## Upgrading to v3.0.0
+
+`v3.0.0` pins the machine config version contract to `talos_version` (see
+[Fork differences](#fork-differences)). That changes `talos_machine_secrets`,
+and the provider treats the contract as forcing replacement:
+
+```
+~ talos_version = "v1.14" -> "1.13.0" # forces replacement
+```
+
+Replacing the secrets means a new cluster PKI, so on a **running** cluster this
+is destructive — plan it as a rebuild, not an in-place upgrade. Your VMs aren't
+touched by the change itself, only the Talos identity on top of them. If you're
+coming from `v2.0.0` with a live cluster and don't want to re-key it, stay on
+`v2.0.0` until you're ready to rebuild.
+
+On a cluster that hasn't bootstrapped yet, it's free — there's no PKI worth
+keeping.
 
 ## Example usage
 
@@ -53,7 +85,7 @@ provider "proxmox" {
 }
 
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v2.0.0"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.0.0"
 
   talos_cluster_name = "test-cluster"
   talos_version      = "1.13.0"
