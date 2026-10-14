@@ -133,6 +133,12 @@ variable "talos_version" {
   type        = string
 }
 
+variable "kubernetes_version" {
+  description = "Kubernetes version baked into the generated machine config. Leave null to take the provider's own default, but note that default comes from the Talos SDK the provider was built with, so it can be newer than `talos_version` accepts - Talos rejects the config outright in that case. Pin it alongside `talos_version`."
+  type        = string
+  default     = null
+}
+
 variable "talos_arch" {
   description = "Architecture of Talos to use"
   type        = string

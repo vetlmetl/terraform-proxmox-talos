@@ -144,21 +144,31 @@ resource "talos_machine_secrets" "talos_secrets" {
 data "talos_machine_configuration" "control_mc" {
   # Pinned for the same reason as the secrets above. This is the config schema
   # contract, not the installed version - the image URL is what installs Talos.
-  talos_version    = var.talos_version
-  cluster_name     = var.talos_cluster_name
-  machine_type     = "controlplane"
-  cluster_endpoint = var.cluster_endpoint
-  machine_secrets  = talos_machine_secrets.talos_secrets.machine_secrets
+  #
+  # kubernetes_version needs pinning separately: the contract above does not
+  # constrain it, and its default also tracks the provider's Talos SDK, so it
+  # can land on a Kubernetes newer than talos_version tolerates.
+  talos_version      = var.talos_version
+  kubernetes_version = var.kubernetes_version
+  cluster_name       = var.talos_cluster_name
+  machine_type       = "controlplane"
+  cluster_endpoint   = var.cluster_endpoint
+  machine_secrets    = talos_machine_secrets.talos_secrets.machine_secrets
 }
 
 data "talos_machine_configuration" "worker_mc" {
   # Pinned for the same reason as the secrets above. This is the config schema
   # contract, not the installed version - the image URL is what installs Talos.
-  talos_version    = var.talos_version
-  cluster_name     = var.talos_cluster_name
-  machine_type     = "worker"
-  cluster_endpoint = var.cluster_endpoint
-  machine_secrets  = talos_machine_secrets.talos_secrets.machine_secrets
+  #
+  # kubernetes_version needs pinning separately: the contract above does not
+  # constrain it, and its default also tracks the provider's Talos SDK, so it
+  # can land on a Kubernetes newer than talos_version tolerates.
+  talos_version      = var.talos_version
+  kubernetes_version = var.kubernetes_version
+  cluster_name       = var.talos_cluster_name
+  machine_type       = "worker"
+  cluster_endpoint   = var.cluster_endpoint
+  machine_secrets    = talos_machine_secrets.talos_secrets.machine_secrets
 }
 
 data "talos_client_configuration" "talos_client_config" {

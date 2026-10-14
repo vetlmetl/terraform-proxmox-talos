@@ -28,6 +28,13 @@ and I consume it by release tag rather than from the registry. I use it from my
   `DiscoveryServiceConfig` document, and a 1.13 node refuses the whole config
   with `"DiscoveryServiceConfig" "v1alpha1": not registered`. Pinning the
   contract to the version being installed keeps the two in step.
+- **`kubernetes_version` is exposed and should be pinned next to `talos_version`.**
+  The version contract above doesn't constrain Kubernetes, and the provider's own
+  default for it also tracks the bundled Talos SDK — so provider `0.12.0` asks for
+  Kubernetes `1.37.0`, and Talos `1.13.0` throws the config out with
+  `version of Kubernetes 1.37.0 is too new to be used with Talos 1.13.0` for all
+  five component images. Left `null` you get the provider default, which is fine
+  until a provider bump moves it out from under you.
 - **`talos_machine_bootstrap` waits on the control-plane config apply.** Its own
   arguments only reference the secrets and a node IP, so Terraform is free to run
   it in parallel with the config apply — against a node still in maintenance mode,
@@ -38,12 +45,12 @@ Consume it by tag:
 
 ```terraform
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.0.0"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.1.0"
   # ...
 }
 ```
 
-## Upgrading to v3.0.0
+## Upgrading to v3.0.0+
 
 `v3.0.0` pins the machine config version contract to `talos_version` (see
 [Fork differences](#fork-differences)). That changes `talos_machine_secrets`,
@@ -85,10 +92,11 @@ provider "proxmox" {
 }
 
 module "talos" {
-  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.0.0"
+  source = "git::https://github.com/vetlmetl/terraform-proxmox-talos.git?ref=v3.1.0"
 
   talos_cluster_name = "test-cluster"
   talos_version      = "1.13.0"
+  kubernetes_version = "1.36.0" # pin with talos_version; see Fork differences
   cluster_endpoint   = "https://192.168.88.200:6443" # required (VIP)
   node_ipv4_cidr     = "192.168.88.0/24"             # required (node subnet)
 
